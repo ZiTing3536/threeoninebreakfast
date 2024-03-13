@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>祚維早點</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+    }
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #d81b60;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #b3144e;
+    }
+    .order {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      cursor: pointer;
+      color: #d81b60;
+    }
+    .delete-btn:hover {
+      color: #b3144e;
+    }
+    .order-info {
+      margin-top: 10px;
+    }
+    .order-info p {
+      margin: 5px 0;
+    }
+
+    /* Responsive Styling */
+    @media only screen and (max-width: 600px) {
+      .container {
+        padding: 10px;
+        border-radius: 0;
+      }
+      h2 {
+        font-size: 24px;
+      }
+      button {
+        width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>祚維早點</h2>
+  <form id="orderForm">
+    <div class="form-group">
+      <label for="userName">用戶名：</label>
+      <input type="text" id="userName" name="userName" required>
+    </div>
+    <div class="form-group">
+      <label for="itemName">品名：</label>
+      <input type="text" id="itemName" name="itemName" required>
+    </div>
+    <div class="form-group">
+      <label for="quantity">數量：</label>
+      <input type="number" id="quantity" name="quantity" required>
+    </div>
+    <div class="form-group">
+      <label for="specialRequirements">特殊要求：</label>
+      <input type="text" id="specialRequirements" name="specialRequirements">
+    </div>
+    <button type="submit">下單</button>
+  </form>
+  <div id="orders"></div>
+</div>
+
+<script>
+  // Function to get current time in GMT+8
+  function getCurrentTime() {
+    const now = new Date();
+    const offset = 8; // GMT+8
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const currentTime = new Date(utc + (3600000 * offset));
+
+    return currentTime.toLocaleString();
+  }
+
+  // Function to delete an order
+  function deleteOrder(event) {
+    const orderDiv = event.target.closest('.order');
+    orderDiv.remove();
+    saveOrders(); // Save the updated orders to local storage
+  }
+
+  // Function to save orders to local storage
+  function saveOrders() {
+    const orders = document.querySelectorAll('.order');
+    const orderData = [];
+    orders.forEach(order => {
+      const orderInfo = {
+        userName: order.querySelector('.userName').textContent,
+        itemName: order.querySelector('.itemName').textContent,
+        quantity: order.querySelector('.quantity').textContent,
+        specialRequirements: order.querySelector('.specialRequirements').textContent,
+        orderTime: order.querySelector('.orderTime').textContent
+      };
+      orderData.push(orderInfo);
+    });
+    localStorage.setItem('orders', JSON.stringify(orderData));
+  }
+
+  // Function to load orders from local storage
+  function loadOrders() {
+    const orders = JSON.parse(localStorage.getItem('orders'));
+    if (orders) {
+      orders.forEach(orderInfo => {
+        const orderDiv = document.createElement('div');
+        orderDiv.className = 'order';
+        orderDiv.innerHTML = `<h3>訂單摘要：</h3>
+                              <div class="order-info">
+                                <p>用戶名：<span class="userName">${orderInfo.userName}</span></p>
+                                <p>品名：<span class="itemName">${orderInfo.itemName}</span></p>
+                                <p>數量：<span class="quantity">${orderInfo.quantity}</span></p>
+                                <p>特殊要求：<span class="specialRequirements">${orderInfo.specialRequirements}</span></p>
+                                <p>下單時間：<span class="orderTime">${orderInfo.orderTime}</span></p>
+                              </div>
+                              <span class="delete-btn" onclick="deleteOrder(event)">❌</span>`;
+        document.getElementById('orders').appendChild(orderDiv);
+      });
+    }
+  }
+
+  // Load orders when the page loads
+  window.addEventListener('load', loadOrders);
+
+  document.getElementById('orderForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const userName = document.getElementById('userName').value;
+    const itemName = document.getElementById('itemName').value;
+    const quantity = document.getElementById('quantity').value;
+    const specialRequirements = document.getElementById('specialRequirements').value;
+    const orderTime = getCurrentTime(); // Record the order time
+
+    const orderDiv = document.createElement('div');
+    orderDiv.className = 'order';
+    orderDiv.innerHTML = `<h3>訂單摘要：</h3>
+                          <div class="order-info">
+                            <p>用戶名：<span class="userName">${userName}</span></p>
+                            <p>品名：<span class="itemName">${itemName}</span></p>
+                            <p>數量：<span class="quantity">${quantity}</span></p>
+                            <p>特殊要求：<span class="specialRequirements">${specialRequirements}</span></p>
+                            <p>下單時間：<span class="orderTime">${orderTime}</span></p>
+                          </div>
+                          <span class="delete-btn" onclick="deleteOrder(event)">❌</span>`;
+    
+    document.getElementById('orders').appendChild(orderDiv);
+
+    saveOrders(); // Save the new order to local storage
+
+    document.getElementById('orderForm').reset(); // Clear form fields after submission
+  });
+</script>
+
+</body>
+</html>
